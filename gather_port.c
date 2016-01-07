@@ -147,6 +147,7 @@ static void get_gather_cmd(struct gather_port * port, char* buffer, int *length)
 		}
 
 		port->cmd_start_index = (port->cmd_start_index + 1) % MAX_CMD_COUNT;
+		port->cmd_length=port->cmd_length-1;
 	}
 
 	pthread_mutex_unlock(pMutex);
