@@ -8,6 +8,7 @@
 #ifndef PORT_MANAGER_H_
 #define PORT_MANAGER_H_
 
+#include <sys/types.h>
 #include "config.h"
 #include "gather_port.h"
 #include "can_port.h"

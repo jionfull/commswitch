@@ -18,6 +18,8 @@
 #include "network.h"
 #include "port_manager.h"
 
+#include "version.h"
+
 #define DLE		(0x10)
 #define STX		(0x02)
 #define ETX 	(0x03)
@@ -285,6 +287,9 @@ static void process_frame(char* frame, int length) {
 		break;
 	case (char) 0xf3:
 		get_port_mode(manager, 0xf3, frame + 3, length - 5);
+		break;
+	case (char) 0xfe:
+		get_app_version(manager);
 		break;
 
 	}
