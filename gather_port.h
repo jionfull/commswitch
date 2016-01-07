@@ -63,7 +63,7 @@ struct gather_port {
 
 	pthread_mutex_t mutext;
 	int cmd_start_index;
-	int cmd_end_index;
+	int cmd_length;
 	char cmd_list[MAX_CMD_COUNT][MAX_CMD_LENGTH];
 	enum GatherMode work_mode;
 

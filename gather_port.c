@@ -77,7 +77,7 @@ struct gather_port * create_gather(char* serial_name, int baudrate) {
 			gather_array[i].frame_manager = fManager;
 			gather_array[i].last_badsensor = 0;
 			gather_array[i].cmd_start_index = 0;
-			gather_array[i].cmd_end_index = 0;
+			gather_array[i].cmd_length = 0;
 			gather_array[i].work_mode = MODE_WORK; //默认为工作模式
 			break;
 		}
@@ -136,7 +136,7 @@ static void get_gather_cmd(struct gather_port * port, char* buffer, int *length)
 	pthread_mutex_t * pMutex = &(port->mutext);
 	pthread_mutex_lock(pMutex);
 
-	if (port->cmd_end_index != port->cmd_start_index) {
+	if (port->cmd_length >0) {
 
 		char * cmd = port->cmd_list[port->cmd_start_index];
 		int len = cmd[0] | (cmd[1] << 8);
@@ -155,16 +155,15 @@ static void get_gather_cmd(struct gather_port * port, char* buffer, int *length)
 void send_serial_data(struct gather_port *port, char * buffer, int length) {
 
 	char dst_addr = buffer[1];
+	int index_cmd;
 	if ((dst_addr == (char) 0xff) || (port->work_mode == MODE_DEBUG)) { //(char) must be exist
 		pthread_mutex_t * pMutex = &(port->mutext);
 		pthread_mutex_lock(pMutex);
 
-		port->cmd_end_index = (port->cmd_end_index + 1) % MAX_CMD_COUNT;
-		if (port->cmd_end_index == port->cmd_start_index) {
-			port->cmd_start_index = (port->cmd_start_index + 1) % MAX_CMD_COUNT;
-		}
+		index_cmd = (port->cmd_length +port->cmd_start_index) % MAX_CMD_COUNT;
 
-		char * cmd = port->cmd_list[port->cmd_end_index];
+
+		char * cmd = port->cmd_list[index_cmd];
 
 		cmd[0] = length & 0xff;
 		cmd[1] = (length >> 8) & 0xff;
@@ -173,6 +172,11 @@ void send_serial_data(struct gather_port *port, char * buffer, int length) {
 			cmd[2 + i] = buffer[i];
 		}
 
+		port->cmd_length=port->cmd_length+1;
+		if(port->cmd_length>MAX_CMD_COUNT)
+		{
+			port->cmd_length=MAX_CMD_COUNT;
+		}
 		pthread_mutex_unlock(pMutex);
 	} else {
 

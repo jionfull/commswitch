@@ -161,6 +161,8 @@ void set_port_mode(struct port_manager*manager, char *buffer, int length) {
 	for (i = 0; i < manager->gather_num; i++) {
 		if (manager->gathers[i]->portIndex == portIndex) {
 			manager->gathers[i]->work_mode = buffer[3];
+			manager->gathers[i]->cmd_length=0;
+			manager->gathers[i]->cmd_start_index=0;
 			break;
 		}
 	}
