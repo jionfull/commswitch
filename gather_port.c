@@ -564,7 +564,7 @@ static void * proc_work(void * data) {
 	int i;
 	struct gather_port* pgather = (struct gather_port*) data;
 	struct frame_manager *pManager = pgather->frame_manager;
-	char buffer[100];
+	char buffer[16*1024];
 	int length = 0;
 
 	diff.tv_sec = 0;
