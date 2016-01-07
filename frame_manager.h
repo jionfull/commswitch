@@ -20,13 +20,11 @@
 #define STX (0x02)
 #define ETX (0x03)
 
-
-struct frame_manager
-{
+struct frame_manager {
 	int used;
 	int wrIndex;
 	int frame_count;
-	char frame_array [MAX_FRAME_COUNT][MAX_RX_FRAME_LENGTH];
+	char frame_array[MAX_FRAME_COUNT][MAX_RX_FRAME_LENGTH];
 	char rx_buffer[RX_BUFFER_SIZE];
 	char frame_buffer[MAX_RX_FRAME_LENGTH];
 	char tx_buffer[MAX_TX_FRAME_LENGTH];
@@ -41,14 +39,13 @@ struct frame_manager
 	struct gather_port * port;
 };
 
-
 struct frame_manager * create_frame_manager(int serial_fd);
 
 void start_frame_manager(struct frame_manager* manager);
 void stop_frame_manager(struct frame_manager* manager);
 
 void clear_all_frame(struct frame_manager * manager);
-void send2sensor(struct frame_manager *manager,char* frame,int length);
+void send2sensor(struct frame_manager *manager, char* frame, int length);
 void get_frame(struct frame_manager * manager, char * buffer, int *length,
 		int timeout_ms);
 

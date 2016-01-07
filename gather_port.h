@@ -17,8 +17,7 @@
 #define MAX_SENSOR	(30)
 #define MAX_CMD_COUNT	(2)
 #define MAX_CMD_LENGTH	(10*1024)
-struct smart_sensor
-{
+struct smart_sensor {
 	struct gather_port * port;
 	int addr;
 	int timeout_count;
@@ -41,52 +40,44 @@ struct smart_sensor
 
 };
 
-
-enum GatherMode
-{
-	MODE_DEBUG=1,
-	MODE_WORK=2,
+enum GatherMode {
+	MODE_DEBUG = 1, MODE_WORK = 2,
 };
 
-struct gather_port
-{
-  int used;
-  int serial_fd;
-  int tx_led_fd;
-  int rx_led_fd;
-  char  serial_name[50];
-  char portIndex;
-  int baudrate;
+struct gather_port {
+	int used;
+	int serial_fd;
+	int tx_led_fd;
+	int rx_led_fd;
+	char serial_name[50];
+	char portIndex;
+	int baudrate;
 
-  char tx_data[256];
-  char rx_data[1024*4];
-  int sensor_num;
-  struct smart_sensor  sensors[MAX_SENSOR];
-  int last_badsensor;
-  struct frame_manager * frame_manager;
-  pthread_t thread_wk;
+	char tx_data[256];
+	char rx_data[1024 * 4];
+	int sensor_num;
+	struct smart_sensor sensors[MAX_SENSOR];
+	int last_badsensor;
+	struct frame_manager * frame_manager;
+	pthread_t thread_wk;
 
-  pthread_mutex_t mutext;
-  int cmd_start_index;
-  int cmd_end_index;
-  char cmd_list[MAX_CMD_COUNT][MAX_CMD_LENGTH];
-  enum GatherMode work_mode;
+	pthread_mutex_t mutext;
+	int cmd_start_index;
+	int cmd_end_index;
+	char cmd_list[MAX_CMD_COUNT][MAX_CMD_LENGTH];
+	enum GatherMode work_mode;
 
 };
 
+struct gather_port* create_gather(char*serial_name, int baudrate);
 
-
-
-struct gather_port* create_gather(char*serial_name,int baudrate);
-
-void gather_add_module(int addr,int type);
+void gather_add_module(int addr, int type);
 
 void start_gather_port(struct gather_port* pgather);
 void stop_gather_port(struct gather_port* pgather);
 
 void add_sensor_II(struct gather_port *port, int addr, int type);
 
-
-void send_serial_data(struct gather_port *port, char * buffer,int length);
+void send_serial_data(struct gather_port *port, char * buffer, int length);
 
 #endif /* GATHER_H_ */

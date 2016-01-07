@@ -124,11 +124,12 @@ void to_can_data(struct port_manager* manager, char* buffer, int length) {
 
 }
 
-void get_port_mode(struct port_manager*manager,char cmd, char *buffer, int length) {
+void get_port_mode(struct port_manager*manager, char cmd, char *buffer,
+		int length) {
 	char portIndex = buffer[0];
 	char frame[11];
 	int i;
-	char status=0xff;
+	char status = 0xff;
 	frame[0] = cmd; //Serial-status
 	frame[1] = portIndex; //COM Num
 
@@ -143,11 +144,11 @@ void get_port_mode(struct port_manager*manager,char cmd, char *buffer, int lengt
 	frame[9] = 0;
 
 	for (i = 0; i < manager->gather_num; i++) {
-			if (manager->gathers[i]->portIndex == portIndex) {
-				status=(char)(manager->gathers[i]->work_mode);
-				break;
-			}
+		if (manager->gathers[i]->portIndex == portIndex) {
+			status = (char) (manager->gathers[i]->work_mode);
+			break;
 		}
+	}
 	frame[10] = status;
 
 	send_network_data(manager, frame, 0, 11);

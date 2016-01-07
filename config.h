@@ -14,33 +14,29 @@
 
 #include "ini_doc.h"
 
-struct sensor_config
-{
+struct sensor_config {
 	int addr;
 	int type;
 };
 
-struct port_config
-{
+struct port_config {
 	char *name;
 	char *type;
 	int baudrate;
 	int workMode;
 	int sensorNum;
 
-	struct sensor_config  sensors[MAX_SENSORS_PER_PORT];
+	struct sensor_config sensors[MAX_SENSORS_PER_PORT];
 
 };
 
-struct sensor_type
-{
+struct sensor_type {
 	int type;
 	int query_mode;
 	int wait_time;
 };
 
-struct config_global
-{
+struct config_global {
 	struct ini_doc * pDoc;
 	int portNum;
 	int networkPort;
@@ -50,9 +46,6 @@ struct config_global
 	struct sensor_type sensor_types[MAX_SENSOR_TYPES];
 
 };
-
-
-
 
 struct config_global * get_global_config();
 

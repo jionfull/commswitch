@@ -24,7 +24,6 @@ int main(int argc, char**argv) {
 
 	start_port_manager(manager);
 
-
 	pthread_exit(NULL);
 
 	exit(0);

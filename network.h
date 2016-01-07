@@ -13,8 +13,7 @@
 #define MAX_CLIENT_NUM (5)
 #define NET_FRAME_LENGTH	(64*1024)
 #define NET_BUFFER_LENGTH	(2*1024)
-struct network_client
-{
+struct network_client {
 	int used;
 	int socket;
 	pthread_t threadWk;
@@ -23,8 +22,7 @@ struct network_client
 
 };
 
-struct network
-{
+struct network {
 	int socket_server;
 	int port;
 	pthread_t threadListen;
@@ -37,21 +35,11 @@ struct network
 
 };
 
-
-
-
-
-
-
 struct network * create_network(int netPort);
-
 
 void start_network(struct network * network);
 void stop_network(struct network * network);
 
-void network_send(struct network* network,char* buffer,int offset,int length);
-
-
-
+void network_send(struct network* network, char* buffer, int offset, int length);
 
 #endif /* NETWORK_H_ */

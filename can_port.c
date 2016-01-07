@@ -150,12 +150,11 @@ void send_can_data(struct can_port *port, char * buffer) {
 	}
 	port->snd_num++;
 	if (port->snd_num >= 5) {
-		port->snd_num=0;
+		port->snd_num = 0;
 		usleep(100);
 	}
 
 }
-
 
 static void * can_rx_proc(void * arg) {
 
@@ -170,7 +169,7 @@ static void * can_rx_proc(void * arg) {
 
 	int nbytes;
 	int i, j;
-	char can_buffer[24*MAX_RCV_CAN_FRAME];
+	char can_buffer[24 * MAX_RCV_CAN_FRAME];
 	int socket_can;
 	struct timeval timestamp;
 
@@ -194,67 +193,64 @@ static void * can_rx_proc(void * arg) {
 		return NULL;
 	}
 
-	int left_byte=0;
+	int left_byte = 0;
 	while (1) {
 		int id = 0;
-		if ((nbytes = read(socket_can, ((char*)frames)+left_byte, sizeof(struct can_frame) * MAX_RCV_CAN_FRAME-left_byte))
+		if ((nbytes = read(socket_can, ((char*) frames) + left_byte,
+				sizeof(struct can_frame) * MAX_RCV_CAN_FRAME - left_byte))
 				< 0) {
 			perror("read");
 			break;
 		} else {
 
-			nbytes+=left_byte;
+			nbytes += left_byte;
 			int count = nbytes / sizeof(struct can_frame);
-			left_byte=nbytes % sizeof(struct can_frame);
+			left_byte = nbytes % sizeof(struct can_frame);
 			if (count > 0) {
 				trigger_rx(port);
 			}
 			for (j = 0; j < count; j++) {
 				gettimeofday(&timestamp, NULL);
-				can_buffer[j*24+0] = 1; //CAN Port
-				can_buffer[j*24+1] = port->portIndex; //Port Index
+				can_buffer[j * 24 + 0] = 1; //CAN Port
+				can_buffer[j * 24 + 1] = port->portIndex; //Port Index
 				long tv_sec = (long) (timestamp.tv_sec);
-				can_buffer[j*24+2] = (tv_sec & 0xff);
-				can_buffer[j*24+3] = ((tv_sec >> 8) & 0xff);
-				can_buffer[j*24+4] = ((tv_sec >> 16) & 0xff);
-				can_buffer[j*24+5] = ((tv_sec >> 24) & 0xff);
+				can_buffer[j * 24 + 2] = (tv_sec & 0xff);
+				can_buffer[j * 24 + 3] = ((tv_sec >> 8) & 0xff);
+				can_buffer[j * 24 + 4] = ((tv_sec >> 16) & 0xff);
+				can_buffer[j * 24 + 5] = ((tv_sec >> 24) & 0xff);
 				long tv_usec = (long) (timestamp.tv_usec);
-				can_buffer[j*24+6] = (tv_usec & 0xff);
-				can_buffer[j*24+7] = ((tv_usec >> 8) & 0xff);
-				can_buffer[j*24+8] = ((tv_usec >> 16) & 0xff);
-				can_buffer[j*24+9] = ((tv_usec >> 24) & 0xff);
+				can_buffer[j * 24 + 6] = (tv_usec & 0xff);
+				can_buffer[j * 24 + 7] = ((tv_usec >> 8) & 0xff);
+				can_buffer[j * 24 + 8] = ((tv_usec >> 16) & 0xff);
+				can_buffer[j * 24 + 9] = ((tv_usec >> 24) & 0xff);
 				if (frames[j].can_id & CAN_EFF_FLAG) { //ext frame
 					id = frames[j].can_id & CAN_EFF_MASK;
-					can_buffer[j*24+10] = id & 0xff;
-					can_buffer[j*24+11] = (id >> 8) & 0xff;
-					can_buffer[j*24+12] = (id >> 16) & 0xff;
-					can_buffer[j*24+13] = ((id >> 24) & 0xff) | 0x80;
+					can_buffer[j * 24 + 10] = id & 0xff;
+					can_buffer[j * 24 + 11] = (id >> 8) & 0xff;
+					can_buffer[j * 24 + 12] = (id >> 16) & 0xff;
+					can_buffer[j * 24 + 13] = ((id >> 24) & 0xff) | 0x80;
 				} else {
 					id = frames[j].can_id & CAN_SFF_MASK;
-					can_buffer[j*24+10] = id & 0xff;
-					can_buffer[j*24+11] = (id >> 8) & 0xff;
-					can_buffer[j*24+12] = (id >> 16) & 0xff;
-					can_buffer[j*24+13] = 0;
+					can_buffer[j * 24 + 10] = id & 0xff;
+					can_buffer[j * 24 + 11] = (id >> 8) & 0xff;
+					can_buffer[j * 24 + 12] = (id >> 16) & 0xff;
+					can_buffer[j * 24 + 13] = 0;
 				}
-				can_buffer[j*24+14] = frames[j].can_dlc;
+				can_buffer[j * 24 + 14] = frames[j].can_dlc;
 				for (i = 0; i < frames[j].can_dlc; i++) {
-					can_buffer[j*24+15 + i] = frames[j].data[i];
+					can_buffer[j * 24 + 15 + i] = frames[j].data[i];
 				}
 				if (frames[j].can_id & CAN_RTR_FLAG) {
 				}
 
-
 			}
-			if(count>0)
-			{
-				send_network_data(manager, can_buffer, 0, 24*count);
+			if (count > 0) {
+				send_network_data(manager, can_buffer, 0, 24 * count);
 			}
-			if(left_byte>0)
-			{
-				char * buffer=(char*)frames;
-				for( i=0;i<left_byte;i++)
-				{
-					buffer[i]=buffer[count*sizeof(struct can_frame)+i];
+			if (left_byte > 0) {
+				char * buffer = (char*) frames;
+				for (i = 0; i < left_byte; i++) {
+					buffer[i] = buffer[count * sizeof(struct can_frame) + i];
 				}
 			}
 

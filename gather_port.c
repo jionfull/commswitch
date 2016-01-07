@@ -19,7 +19,6 @@
 #include "port_manager.h"
 #include "config.h"
 
-
 #define QUERY_INTERVAL	(1000000) //1S
 #define WAIT_TIMEOUT (50)	//50ms
 
@@ -38,7 +37,7 @@ static void query_analog(struct smart_sensor* sensor);
 static void query_curve(struct smart_sensor *sensor);
 static void query_others(struct smart_sensor *sensor);
 
-static struct gather_port* gather_array=NULL;
+static struct gather_port* gather_array = NULL;
 
 enum query_type {
 	TYPE_CMD = -1,
@@ -53,14 +52,13 @@ struct gather_port * create_gather(char* serial_name, int baudrate) {
 
 	int i;
 	struct gather_port * pgather = NULL;
-	if(gather_array==NULL)
-	{
-		gather_array=(struct gather_port*)malloc(sizeof(struct gather_port)*MAX_GATHER_NUM);
-		if(gather_array==NULL)
-			{
-				printf("size:%d",sizeof(struct gather_port));
-				return NULL;
-			}
+	if (gather_array == NULL) {
+		gather_array = (struct gather_port*) malloc(
+				sizeof(struct gather_port) * MAX_GATHER_NUM);
+		if (gather_array == NULL) {
+			printf("size:%d", sizeof(struct gather_port));
+			return NULL;
+		}
 
 	}
 	for (i = 0; i < MAX_GATHER_NUM; i++) {
@@ -157,7 +155,7 @@ static void get_gather_cmd(struct gather_port * port, char* buffer, int *length)
 void send_serial_data(struct gather_port *port, char * buffer, int length) {
 
 	char dst_addr = buffer[1];
-	if ((dst_addr == (char) 0xff) || (port->work_mode==MODE_DEBUG)) { //(char) must be exist
+	if ((dst_addr == (char) 0xff) || (port->work_mode == MODE_DEBUG)) { //(char) must be exist
 		pthread_mutex_t * pMutex = &(port->mutext);
 		pthread_mutex_lock(pMutex);
 
@@ -205,7 +203,7 @@ void add_sensor_II(struct gather_port *port, int addr, int type) {
 	struct smart_sensor* sensor = port->sensors + port->sensor_num;
 	sensor->port = port;
 	sensor->addr = addr;
-	sensor->type =get_sensor_type(type);
+	sensor->type = get_sensor_type(type);
 	sensor->timeout_count = 0;
 	sensor->tx_data = port->tx_data;
 	sensor->rx_data = port->rx_data;
@@ -220,26 +218,22 @@ void add_sensor_II(struct gather_port *port, int addr, int type) {
 }
 
 static void init_sensor(struct smart_sensor* sensor, int wait_time) {
-	struct sensor_type * sen_type=sensor->type;
+	struct sensor_type * sen_type = sensor->type;
 	sensor->wait_time = wait_time;
 	sensor->query_digit = NULL;
 	sensor->query_analog = NULL;
 	sensor->query_curve = NULL;
 	sensor->query_others = query_others;
 
-	if(sen_type!=NULL)
-	{
-		int mode=sen_type->query_mode;
-		if(mode&0x01)
-		{
+	if (sen_type != NULL) {
+		int mode = sen_type->query_mode;
+		if (mode & 0x01) {
 			sensor->query_digit = query_digital;
 		}
-		if(mode&0x02)
-		{
+		if (mode & 0x02) {
 			sensor->query_analog = query_analog;
 		}
-		if(mode&0x04)
-		{
+		if (mode & 0x04) {
 			sensor->query_curve = query_curve;
 		}
 	}
@@ -251,7 +245,7 @@ static void trigger_tx(struct gather_port* port) {
 		write(port->tx_led_fd, "1", 1);
 	}
 }
- void trigger_rx(struct gather_port* port) {
+void trigger_rx(struct gather_port* port) {
 	if (port->rx_led_fd > 0) {
 		write(port->rx_led_fd, "1", 1);
 	}
@@ -283,7 +277,7 @@ static void query_data(struct smart_sensor *sensor, char type) {
 		get_frame(pManager, rx_frame, &length, WAIT_TIMEOUT);
 		if (length > 0) {
 			if (rx_frame[4] == TYPE_VERSION) {
-				sensor->type =get_sensor_type( rx_frame[5] & 0x7f);
+				sensor->type = get_sensor_type(rx_frame[5] & 0x7f);
 				sensor->version[0] = rx_frame[5];
 				sensor->version[1] = rx_frame[6];
 				sensor->version[2] = rx_frame[7];
@@ -300,8 +294,9 @@ static void query_data(struct smart_sensor *sensor, char type) {
 
 		}
 	} else if (type == TYPE_ANALOG || type == TYPE_DIGITAL) {
-		if(sensor->type==NULL) return;
-		int wTime=sensor->type->wait_time;
+		if (sensor->type == NULL)
+			return;
+		int wTime = sensor->type->wait_time;
 		get_frame(pManager, rx_frame + 11, &length, wTime);
 		if (length > 0) {
 			sensor->timeout_count = 0;
@@ -321,15 +316,16 @@ static void query_data(struct smart_sensor *sensor, char type) {
 			rx_frame[9] = ((tv_usec >> 24) & 0xff);
 
 			rx_frame[10] = 0xff;
-			if (sensor->type !=NULL) {
+			if (sensor->type != NULL) {
 				rx_frame[10] = sensor->type->type;
 			}
 			send_network_data(portManager, rx_frame, 0, length + 11);
 			trigger_rx(pgather);
 		}
 	} else if (type == TYPE_CURVE) {
-		if(sensor->type==NULL) return;
-		int wTime=sensor->type->wait_time;
+		if (sensor->type == NULL)
+			return;
+		int wTime = sensor->type->wait_time;
 		while (1) {
 
 			get_frame(pManager, rx_frame + 11, &length, wTime);
@@ -490,7 +486,8 @@ void stop_gather_port(struct gather_port * pgather) {
 }
 
 static void query_dc_digital(struct smart_sensor * sensor) {
-	if(sensor->type==NULL) return;
+	if (sensor->type == NULL)
+		return;
 	if (sensor->type->type != 19)
 		return;
 	if (sensor->query_digit != NULL) //query digital data
@@ -510,7 +507,7 @@ static void query_sensor(struct smart_sensor * sensor) {
 		sensor->timeout_count = MAX_TIMEOUT_COUNT;
 		sensor->type = NULL;
 	}
-	if (sensor->type ==NULL) {
+	if (sensor->type == NULL) {
 		query_version(sensor);
 	}
 	if (sensor->query_others != NULL) //first deal with cmd
@@ -565,8 +562,8 @@ static void * proc_work(void * data) {
 	char buffer[100];
 	int length = 0;
 
-	diff.tv_sec=0;
-	diff.tv_usec=0;
+	diff.tv_sec = 0;
+	diff.tv_usec = 0;
 	while (1) {
 
 		gettimeofday(&start, NULL);

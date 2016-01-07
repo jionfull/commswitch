@@ -66,7 +66,7 @@ struct ini_doc *create_ini_doc(char * file_name) {
 
 			}
 		} else if (pSection != NULL) {
-			index = find_index(line, 0,'=');
+			index = find_index(line, 0, '=');
 			if (index >= 1 && index < length - 1) //find a new key-value
 					{
 				line[index] = '\0';
@@ -79,11 +79,11 @@ struct ini_doc *create_ini_doc(char * file_name) {
 				pKey->key = name;
 
 				value = (char*) malloc(length - index);
-				strcpy(value,line+index+1);
-				value[length-index-1]='\0';
+				strcpy(value, line + index + 1);
+				value[length - index - 1] = '\0';
 				pKey->value = value;
 
-				insert_key(pSection,pKey);
+				insert_key(pSection, pKey);
 
 			}
 
@@ -102,44 +102,38 @@ void destroy_ini_doc(struct ini_doc * pDoc) {
 
 }
 
-char* get_ini_string(struct ini_doc* doc,char* section,char* key)
-{
-	 if(doc==NULL) return NULL;
-	 int i,j;
-	 int secNum=doc->sectionNum;
-	 struct ini_section * pSection=doc->sections;
-	 char *value=NULL;
-	 for(i=0;i<secNum;i++)
-	 {
-		 if(strcmp(pSection->name,section)==0)
-		 {
-			 struct ini_key* pKey=pSection->keys;
-			 int keyNum=pSection->keyNum;
-			 for(j=0;j<keyNum;j++)
-			 {
-				 if(strcmp(pKey->key,key)==0)
-				 {
-					 value=pKey->value;
-					 break;
-				 }
-				 pKey=pKey->next;
+char* get_ini_string(struct ini_doc* doc, char* section, char* key) {
+	if (doc == NULL)
+		return NULL;
+	int i, j;
+	int secNum = doc->sectionNum;
+	struct ini_section * pSection = doc->sections;
+	char *value = NULL;
+	for (i = 0; i < secNum; i++) {
+		if (strcmp(pSection->name, section) == 0) {
+			struct ini_key* pKey = pSection->keys;
+			int keyNum = pSection->keyNum;
+			for (j = 0; j < keyNum; j++) {
+				if (strcmp(pKey->key, key) == 0) {
+					value = pKey->value;
+					break;
+				}
+				pKey = pKey->next;
 
+			}
 
-			 }
-
-
-			 break;
-		 }
-		 pSection=pSection->next;
-	 }
+			break;
+		}
+		pSection = pSection->next;
+	}
 	return value;
 }
 
-int get_ini_int(struct ini_doc* doc,char* section,char* key)
-{
-	char * string=get_ini_string(doc,section,key);
-	if(string==NULL) return -1;
-	int value=atoi(string);
+int get_ini_int(struct ini_doc* doc, char* section, char* key) {
+	char * string = get_ini_string(doc, section, key);
+	if (string == NULL)
+		return -1;
+	int value = atoi(string);
 	return value;
 }
 
@@ -158,7 +152,7 @@ static char* trim_string(char * src, int * length) {
 		return NULL;
 	}
 	for (i = len - 1; i >= 0; i--) {
-		if (!isblank(src[i]) && (src[i]!='\n') && (src[i]!='\r'))
+		if (!isblank(src[i]) && (src[i] != '\n') && (src[i] != '\r'))
 			break;
 		*end = '\0';
 		end--;

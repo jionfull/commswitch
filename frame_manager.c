@@ -96,8 +96,7 @@ static void * serial_rx(void * data) {
 
 			switch (rx_buffer[i]) {
 			case DLE:
-				if(metDLE==0)
-				{
+				if (metDLE == 0) {
 					frame_buffer[frameLength] = DLE;
 					frameLength++;
 				}
@@ -170,35 +169,32 @@ static void check_frame(struct frame_manager * manager, char* frame, int length)
 extern void trigger_rx(struct gather_port *port);
 static void put_frame(struct frame_manager * manager, char* frame, int length) {
 
-	if((manager->port->work_mode)==MODE_DEBUG) //调试模式透传
-	{
-		struct gather_port *port=manager->port;
-		char *rx_frame=port->rx_data;
+	if ((manager->port->work_mode) == MODE_DEBUG) //调试模式透传
+			{
+		struct gather_port *port = manager->port;
+		char *rx_frame = port->rx_data;
 		int i;
 		struct port_manager * portManager = get_port_manager();
-					rx_frame[0] = 0x02; //Serial-data
-					rx_frame[1] = port->portIndex; //COM Num
+		rx_frame[0] = 0x02; //Serial-data
+		rx_frame[1] = port->portIndex; //COM Num
 
+		rx_frame[2] = 0;
+		rx_frame[3] = 0;
+		rx_frame[4] = 0;
+		rx_frame[5] = 0;
 
-					rx_frame[2] = 0;
-					rx_frame[3] = 0;
-					rx_frame[4] = 0;
-					rx_frame[5] = 0;
+		rx_frame[6] = 0;
+		rx_frame[7] = 0;
+		rx_frame[8] = 0;
+		rx_frame[9] = 0;
 
-					rx_frame[6] = 0;
-					rx_frame[7] = 0;
-					rx_frame[8] = 0;
-					rx_frame[9] = 0;
-
-					rx_frame[10] = 0xff; //sensorType
-					for(i=0;i<length-4;i++)
-					{
-						rx_frame[11+i]=frame[i+2];
-					}
-					trigger_rx(port);
-					send_network_data(portManager, rx_frame, 0, length-4 + 11);
-	}
-	else //工作模式
+		rx_frame[10] = 0xff; //sensorType
+		for (i = 0; i < length - 4; i++) {
+			rx_frame[11 + i] = frame[i + 2];
+		}
+		trigger_rx(port);
+		send_network_data(portManager, rx_frame, 0, length - 4 + 11);
+	} else //工作模式
 	{
 		pthread_mutex_t * pMutex = &(manager->mutext);
 		pthread_mutex_lock(pMutex);
@@ -233,7 +229,6 @@ static void put_frame(struct frame_manager * manager, char* frame, int length) {
 
 		pthread_mutex_unlock(pMutex);
 	}
-
 
 }
 

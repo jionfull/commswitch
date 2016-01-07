@@ -25,7 +25,7 @@ struct can_port {
 
 };
 
-struct can_port * create_can_port(char* name,int baudrate);
+struct can_port * create_can_port(char* name, int baudrate);
 void start_can_port(struct can_port * port);
 void stop_can_port(struct can_port * port);
 void send_can_data(struct can_port *port, char * buffer);
