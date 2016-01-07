@@ -12,17 +12,21 @@ extern const char const sha1_end[];
 
 void get_app_version(struct port_manager * manager) {
 	char frame[64];
+
 	int i;
+	for (i = 0; i < 64; i++) {
+		frame[i] = 0;
+	}
 	frame[0] = 0xfe; //ver cmd
 	frame[1] = 0; //COM Num
 
-	frame[2] = 1; //1.1.0.0
-	frame[3] = 1;
-	frame[4] = 0;
-	frame[5] = 0;
+	frame[10] = 1; //1.1.0.0
+	frame[11] = 1;
+	frame[12] = 0;
+	frame[13] = 0;
 
 	for (i = 0; i < sha1_end - sha1_begin; i++) {
-		frame[6 + i] = sha1_begin[i];
+		frame[14 + i] = sha1_begin[i];
 	}
 
 	send_network_data(manager, frame, 0, 64);
