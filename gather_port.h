@@ -16,7 +16,11 @@
 
 #define MAX_SENSOR	(30)
 #define MAX_CMD_COUNT	(2)
-#define MAX_CMD_LENGTH	(10*1024)
+#define MAX_SENSOR_CMD_LENGTH	(1024)
+
+#define MAX_GATHER_TX_LENGTH	(64*1024)
+#define MAX_GATHER_RX_LENGTH	(32*1024)
+
 struct smart_sensor {
 	struct gather_port * port;
 	int addr;
@@ -30,7 +34,7 @@ struct smart_sensor {
 	pthread_mutex_t mutext;
 	int cmd_start_index;
 	int cmd_end_index;
-	char cmd_list[MAX_CMD_COUNT][MAX_CMD_LENGTH];
+	char cmd_list[MAX_CMD_COUNT][MAX_SENSOR_CMD_LENGTH];
 
 	struct sensor_type * type;
 	void (*query_digit)(struct smart_sensor *sensor);
@@ -53,8 +57,8 @@ struct gather_port {
 	char portIndex;
 	int baudrate;
 
-	char tx_data[256];
-	char rx_data[1024 * 4];
+	char tx_data[MAX_GATHER_TX_LENGTH];
+	char rx_data[MAX_GATHER_RX_LENGTH];
 	int sensor_num;
 	struct smart_sensor sensors[MAX_SENSOR];
 	int last_badsensor;
@@ -64,7 +68,7 @@ struct gather_port {
 	pthread_mutex_t mutext;
 	int cmd_start_index;
 	int cmd_length;
-	char cmd_list[MAX_CMD_COUNT][MAX_CMD_LENGTH];
+	char cmd_list[MAX_CMD_COUNT][MAX_GATHER_TX_LENGTH];
 	enum GatherMode work_mode;
 
 };

@@ -241,6 +241,10 @@ static void init_sensor(struct smart_sensor* sensor, int wait_time) {
 		if (mode & 0x04) {
 			sensor->query_curve = query_curve;
 		}
+		if(mode & 0x08)
+		{
+			sensor->query_others=query_others;
+		}
 	}
 
 }
@@ -564,7 +568,7 @@ static void * proc_work(void * data) {
 	int i;
 	struct gather_port* pgather = (struct gather_port*) data;
 	struct frame_manager *pManager = pgather->frame_manager;
-	char buffer[16*1024];
+	char* buffer=pgather->tx_data;
 	int length = 0;
 
 	diff.tv_sec = 0;
