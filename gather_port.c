@@ -229,7 +229,7 @@ static void init_sensor(struct smart_sensor* sensor, int wait_time) {
 	sensor->query_analog = NULL;
 	sensor->query_curve = NULL;
 	sensor->query_others = query_others;
-
+	sensor->timeout_count = 0;
 	if (sen_type != NULL) {
 		int mode = sen_type->query_mode;
 		if (mode & 0x01) {
@@ -598,7 +598,10 @@ static void * proc_work(void * data) {
 			}
 
 			//query next bad sensor
-			query_next_bad_sensor(pgather);
+			for(i=0;i<5;i++)
+			{
+				query_next_bad_sensor(pgather);
+			}
 
 			gettimeofday(&stop, NULL);
 			timeval_subtract(&diff, &start, &stop);
