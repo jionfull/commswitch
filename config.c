@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 #include "ini_doc.h"
 #include "config.h"
@@ -19,6 +21,9 @@ static struct port_config* insert_port_config(struct config_global * gconfig,
 static void insert_sensor_config(struct port_config * port, int addr, int type);
 
 static struct config_global *global_config = NULL;
+
+extern const char const config_begin[];
+extern const char const config_end[];
 
 static void insert_sensor_config(struct port_config * port, int addr, int type) {
 	if (port == NULL)
@@ -108,6 +113,20 @@ struct config_global * get_global_config() {
 		int i;
 
 		char buffer[128];
+
+
+		if ((access("./config.ini", F_OK)) == -1) // file does not exist!
+		{
+
+			FILE* file=fopen("./config.ini","wb");
+			if(file!=NULL)
+			{
+				fwrite(config_begin,config_end-config_begin,1,file);
+				fflush(file);
+				fclose(file);
+			}
+
+		}
 		global_config = (struct config_global*) malloc(
 				sizeof(struct config_global));
 		struct ini_doc * config_doc = create_ini_doc("./config.ini");

@@ -17,6 +17,7 @@ static void insert_key(struct ini_section *pSection, struct ini_key * pKey);
 static char* trim_string(char * src, int * length);
 static int find_index(char * src, int offset, char c);
 
+
 struct ini_doc *create_ini_doc(char * file_name) {
 	char buffer[256];
 

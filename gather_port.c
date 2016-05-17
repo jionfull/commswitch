@@ -450,7 +450,7 @@ static void query_others(struct smart_sensor *sensor) {
 }
 
 static void config_led(struct gather_port * pgather) {
-	char led_name[30];
+	char led_name[50];
 	int fd;
 	sprintf(led_name, "/sys/class/leds/com%d_tx/delay_on", pgather->portIndex);
 
@@ -585,7 +585,7 @@ static void * proc_work(void * data) {
 				if (sensor->timeout_count >= MAX_TIMEOUT_COUNT)
 					continue;
 				query_sensor(sensor);
-
+				usleep(1000);
 			}
 			//query dc sensor digital
 			for (i = 0; i < pgather->sensor_num; i++) {
@@ -594,6 +594,7 @@ static void * proc_work(void * data) {
 				if (sensor->timeout_count >= MAX_TIMEOUT_COUNT)
 					continue;
 				query_dc_digital(sensor);
+				usleep(1000);
 
 			}
 
@@ -601,13 +602,13 @@ static void * proc_work(void * data) {
 			for(i=0;i<5;i++)
 			{
 				query_next_bad_sensor(pgather);
+				usleep(1000);
 			}
 
 			gettimeofday(&stop, NULL);
 			timeval_subtract(&diff, &start, &stop);
 
-			__useconds_t interval = diff.tv_sec * 1000000 + diff.tv_usec
-					+ 10000;
+			__useconds_t interval = diff.tv_sec * 1000000 + diff.tv_usec;
 
 			if (interval < QUERY_INTERVAL) {
 				usleep(QUERY_INTERVAL - interval);

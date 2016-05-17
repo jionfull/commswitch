@@ -56,8 +56,21 @@ struct can_port * create_can_port(char *name, int baudrate) {
 	return pPort;
 }
 
+static void config_tx_length(struct can_port * port)
+{
+		char param_name[50];
+		int fd;
+		int pIndex = (port->portIndex);
+		sprintf(param_name, "/sys/class/net/can%d/tx_queue_len", pIndex);
+		fd = open(param_name, O_WRONLY);
+		if (fd > 0) {
+			write(fd, "1000", 4);
+			close(fd);
+		}
+}
+
 static void config_led(struct can_port * port) {
-	char led_name[30];
+	char led_name[50];
 	int fd;
 	int pIndex = (port->portIndex);
 	sprintf(led_name, "/sys/class/leds/can%d_tx/delay_on", pIndex);
@@ -90,6 +103,7 @@ static void config_led(struct can_port * port) {
 void start_can_port(struct can_port * port) {
 	if (port == NULL)
 		return;
+	config_tx_length(port);
 	config_led(port);
 	if (can_do_stop(port->name) < 0) {
 		perror("can not stop can\n");
