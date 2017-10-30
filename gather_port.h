@@ -41,6 +41,7 @@ struct smart_sensor {
 	void (*query_analog)(struct smart_sensor *sensor);
 	void (*query_curve)(struct smart_sensor *sensor);
 	void (*query_others)(struct smart_sensor *sensor);
+	void (*query_testsensorlive)(struct smart_sensor *sensor);
 
 };
 

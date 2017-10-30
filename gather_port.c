@@ -36,7 +36,7 @@ static void query_digital(struct smart_sensor *sensor);
 static void query_analog(struct smart_sensor* sensor);
 static void query_curve(struct smart_sensor *sensor);
 static void query_others(struct smart_sensor *sensor);
-
+static void query_testsensorlive(struct smart_sensor *sensor);
 static struct gather_port* gather_array = NULL;
 
 enum query_type {
@@ -245,6 +245,10 @@ static void init_sensor(struct smart_sensor* sensor, int wait_time) {
 		{
 			sensor->query_others=query_others;
 		}
+		if(mode&0x10)
+		{
+			sensor->query_testsensorlive=query_testsensorlive;
+		}
 	}
 
 }
@@ -390,6 +394,59 @@ static void query_analog(struct smart_sensor* sensor) {
 static void query_curve(struct smart_sensor *sensor) {
 	query_data(sensor, TYPE_CURVE);
 }
+
+
+static void query_testsensorlive(struct smart_sensor *sensor)
+{
+	struct gather_port* pgather = sensor->port;
+	struct frame_manager *pManager = pgather->frame_manager;
+	struct port_manager * portManager = get_port_manager();
+
+	char *tx_frame = sensor->tx_data;
+	char *rx_frame = sensor->rx_data;
+	struct timeval tm;
+	int length = 0;
+
+	clear_all_frame(pManager);
+	tx_frame[0] = 0; //src addr
+	tx_frame[1] = (char) sensor->addr; //dest addr
+	tx_frame[2] = 0x07; //request [type-digital,analog etc] data
+	tx_frame[3] = 0x01; //all channel,for query version no sense
+
+	get_frame(pManager, rx_frame, &length, WAIT_TIMEOUT);
+	if (length > 0) {
+		if (rx_frame[4] == TYPE_VERSION) {
+			sensor->timeout_count = 0;
+			gettimeofday(&tm, NULL);
+			rx_frame[0] = 0x02; //Serial-data
+			rx_frame[1] = pgather->portIndex; //COM Num
+
+			long tv_sec = (long) (tm.tv_sec);
+			rx_frame[2] = (tv_sec & 0xff);
+			rx_frame[3] = ((tv_sec >> 8) & 0xff);
+			rx_frame[4] = ((tv_sec >> 16) & 0xff);
+			rx_frame[5] = ((tv_sec >> 24) & 0xff);
+			long tv_usec = (long) (tm.tv_usec);
+			rx_frame[6] = (tv_usec & 0xff);
+			rx_frame[7] = ((tv_usec >> 8) & 0xff);
+			rx_frame[8] = ((tv_usec >> 16) & 0xff);
+			rx_frame[9] = ((tv_usec >> 24) & 0xff);
+
+			rx_frame[10] = 0xff;
+			if (sensor->type != NULL) {
+				rx_frame[10] = sensor->type->type;
+			}
+			rx_frame[11] = 0x30;
+			rx_frame[12] = 0xff;
+			send_network_data(portManager, rx_frame, 0, 2 + 11);
+
+			trigger_rx(pgather);
+
+			}
+
+		}
+}
+
 static void query_others(struct smart_sensor *sensor) {
 	struct gather_port* pgather = sensor->port;
 	struct frame_manager *pManager = pgather->frame_manager;

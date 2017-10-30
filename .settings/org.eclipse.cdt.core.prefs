@@ -1,0 +1,12 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/CWD/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/CWD/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/CWD/value=/home/jionfull/git/commswitch/
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/PATH/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/PATH/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/PATH/value=/home/jionfull/commswitch/buildroot-2015.11.1/output/host/opt/ext-toolchain/bin\:/usr/local/bin\:/usr/local/sbin\:/usr/bin\:/usr/sbin
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/PWD/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/PWD/operation=replace
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/PWD/value=/home/jionfull/git/commswitch/
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/append=true
+environment/project/cdt.managedbuild.config.gnu.cross.exe.debug.1865531240/appendContributed=true
