@@ -15,7 +15,7 @@
 #include "config.h"
 
 #define MAX_SENSOR	(33)
-#define MAX_CMD_COUNT	(2)
+#define MAX_CMD_COUNT	(4)
 #define MAX_SENSOR_CMD_LENGTH	(1024)
 
 #define MAX_GATHER_TX_LENGTH	(64*1024)
@@ -37,6 +37,7 @@ struct smart_sensor {
 	char cmd_list[MAX_CMD_COUNT][MAX_SENSOR_CMD_LENGTH];
 
 	struct sensor_type * type;
+	int query_testsensorliveDelayCount;
 	void (*query_digit)(struct smart_sensor *sensor);
 	void (*query_analog)(struct smart_sensor *sensor);
 	void (*query_curve)(struct smart_sensor *sensor);

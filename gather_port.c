@@ -90,13 +90,14 @@ static void add_sensor_cmd(struct smart_sensor * sensor, char * buffer,
 		int length) {
 	pthread_mutex_t * pMutex = &(sensor->mutext);
 	pthread_mutex_lock(pMutex);
-
-	sensor->cmd_end_index = (sensor->cmd_end_index + 1) % MAX_CMD_COUNT;
-	if (sensor->cmd_end_index == sensor->cmd_start_index) {
-		sensor->cmd_start_index = (sensor->cmd_start_index + 1) % MAX_CMD_COUNT;
-	}
+	sensor->query_testsensorliveDelayCount=0;
 
 	char * cmd = sensor->cmd_list[sensor->cmd_end_index];
+
+	sensor->cmd_end_index = (sensor->cmd_end_index + 1) % MAX_CMD_COUNT;
+		if (sensor->cmd_end_index == sensor->cmd_start_index) {
+			sensor->cmd_start_index = (sensor->cmd_start_index + 1) % MAX_CMD_COUNT;
+		}
 
 	cmd[0] = length & 0xff;
 	cmd[1] = (length >> 8) & 0xff;
@@ -104,7 +105,12 @@ static void add_sensor_cmd(struct smart_sensor * sensor, char * buffer,
 	for (i = 0; i < length; i++) {
 		cmd[2 + i] = buffer[i];
 	}
+    printf("add_sensor_cmd %x  startindex=%d endindex==%d\n",
+    		buffer[2],
+			sensor->cmd_start_index,
+			sensor->cmd_end_index
 
+			);
 	pthread_mutex_unlock(pMutex);
 }
 
@@ -118,6 +124,7 @@ static void get_sensor_cmd(struct smart_sensor * sensor, char* buffer,
 
 		char * cmd = sensor->cmd_list[sensor->cmd_start_index];
 		int len = cmd[0] | (cmd[1] << 8);
+		 printf("s get_sensor_cmd %d    %d\n",sensor->cmd_start_index,len);
 		*length = len;
 		int i;
 		for (i = 0; i < len; i++) {
@@ -230,6 +237,8 @@ static void init_sensor(struct smart_sensor* sensor, int wait_time) {
 	sensor->query_curve = NULL;
 	sensor->query_others = query_others;
 	sensor->timeout_count = 0;
+	sensor->query_testsensorliveDelayCount=0;
+	printf("Init Sensor %x",sen_type->query_mode);
 	if (sen_type != NULL) {
 		int mode = sen_type->query_mode;
 		if (mode & 0x01) {
@@ -302,6 +311,7 @@ static void query_data(struct smart_sensor *sensor, char type) {
 						{
 					wait_time = 20;
 				}
+
 				init_sensor(sensor, wait_time);
 			}
 
@@ -398,6 +408,14 @@ static void query_curve(struct smart_sensor *sensor) {
 
 static void query_testsensorlive(struct smart_sensor *sensor)
 {
+	if(sensor->query_testsensorliveDelayCount<7)
+	{
+		sensor->query_testsensorliveDelayCount++;
+		return;
+	}
+	sensor->query_testsensorliveDelayCount=0;
+	printf("sensor live query \n");
+
 	struct gather_port* pgather = sensor->port;
 	struct frame_manager *pManager = pgather->frame_manager;
 	struct port_manager * portManager = get_port_manager();
@@ -412,6 +430,8 @@ static void query_testsensorlive(struct smart_sensor *sensor)
 	tx_frame[1] = (char) sensor->addr; //dest addr
 	tx_frame[2] = 0x07; //request [type-digital,analog etc] data
 	tx_frame[3] = 0x01; //all channel,for query version no sense
+
+	send2sensor(pManager, tx_frame, 4);
 
 	get_frame(pManager, rx_frame, &length, WAIT_TIMEOUT);
 	if (length > 0) {
@@ -436,9 +456,13 @@ static void query_testsensorlive(struct smart_sensor *sensor)
 			if (sensor->type != NULL) {
 				rx_frame[10] = sensor->type->type;
 			}
-			rx_frame[11] = 0x30;
-			rx_frame[12] = 0xff;
-			send_network_data(portManager, rx_frame, 0, 2 + 11);
+			rx_frame[11] = 0x04;
+			rx_frame[12] = 0;
+			rx_frame[13] = (char) sensor->addr;
+			rx_frame[14] = 0x00;
+			rx_frame[15] = 0x30;
+			rx_frame[16] = 0xff;
+			send_network_data(portManager, rx_frame, 0, 17);
 
 			trigger_rx(pgather);
 
@@ -461,7 +485,7 @@ static void query_others(struct smart_sensor *sensor) {
 		get_sensor_cmd(sensor, tx_frame, &length);
 		if (length == 0) //has no cmd
 			break;
-
+		printf("Run query others\n");
 		clear_all_frame(pManager);
 		send2sensor(pManager, tx_frame, length);
 
@@ -592,6 +616,10 @@ static void query_sensor(struct smart_sensor * sensor) {
 	{
 		sensor->query_curve(sensor);
 	}
+	if (sensor->query_testsensorlive != NULL) //query curve data
+		{
+			sensor->query_testsensorlive(sensor);
+		}
 }
 
 static void query_next_bad_sensor(struct gather_port* pgather) {
