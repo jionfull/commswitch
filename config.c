@@ -118,13 +118,7 @@ struct config_global * get_global_config() {
 		if ((access("./config.ini", F_OK)) == -1) // file does not exist!
 		{
 
-			FILE* file=fopen("./config.ini","wb");
-			if(file!=NULL)
-			{
-				fwrite(config_begin,config_end-config_begin,1,file);
-				fflush(file);
-				fclose(file);
-			}
+			exit(-1);
 
 		}
 		global_config = (struct config_global*) malloc(

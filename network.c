@@ -132,6 +132,8 @@ static void * network_listen(void * arg) {
 		exit(1);
 
 	}
+	int option = 1;
+    setsockopt ( socket_server, SOL_SOCKET, SO_REUSEADDR, &option,sizeof( option ));
 
 	if (listen(socket_server, 20)) {
 		perror("listen failed");
@@ -156,7 +158,12 @@ static void * network_listen(void * arg) {
 		index = create_client(pNetwork, sock_client);
 
 		if (index < 0) {
+			printf("connect client number out of range\n");
 			close(sock_client);
+		}
+		else
+		{
+			printf("connect client use thread %d\n",index);
 		}
 
 	}
@@ -186,12 +193,14 @@ static void * client_proc(void * arg) {
 
 	char* const rx_buffer = pClient->rx_buffer;
 	char* const frame_buffer = pClient->frame_buffer;
+
 	int frameLength = 0;
 	int metDLE = 0;
 	int length;
 	int i;
 	fd_set rdFds;
 	fd_set errFds;
+	printf("new connect thread run\n");
 	while (1) {
 
 		FD_ZERO(&rdFds);
@@ -217,7 +226,7 @@ static void * client_proc(void * arg) {
 				pClient->used = 0;
 				break;
 			}
-
+			printf("recve data %d\n",length );
 			for (i = 0; i < length; i++) {
 
 				switch (rx_buffer[i]) {
@@ -268,12 +277,14 @@ static void * client_proc(void * arg) {
 
 	}
 	close(pClient->socket);
+	printf("one connect thread stop\n");
 	return NULL;
 
 }
 
 static void process_frame(char* frame, int length) {
 
+	printf("process cmd %x\n",frame[2]);
 	struct port_manager * manager = get_port_manager();
 	switch (frame[2]) {
 	case 1: //CAN data

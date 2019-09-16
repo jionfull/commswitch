@@ -7,7 +7,7 @@
 
 #include "version.h"
 
-extern const char const sha1_begin[];
+
 extern const char const sha1_end[];
 
 void get_app_version(struct port_manager * manager) {
@@ -25,9 +25,11 @@ void get_app_version(struct port_manager * manager) {
 	frame[12] = 0;
 	frame[13] = 0;
 
-	for (i = 0; i < sha1_end - sha1_begin; i++) {
-		frame[14 + i] = sha1_begin[i];
-	}
+	frame[14] = 19; //年月日
+	frame[15] = 04;
+	frame[16] = 11;
+
+    printf("Receive ver cmd\n");
 
 	send_network_data(manager, frame, 0, 64);
 }

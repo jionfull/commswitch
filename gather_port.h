@@ -14,7 +14,7 @@
 #include "frame_manager.h"
 #include "config.h"
 
-#define MAX_SENSOR	(33)
+#define MAX_SENSOR	(64)
 #define MAX_CMD_COUNT	(4)
 #define MAX_SENSOR_CMD_LENGTH	(1024)
 

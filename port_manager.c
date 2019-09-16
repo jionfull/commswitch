@@ -80,7 +80,16 @@ struct port_manager * get_port_manager() {
 
 void start_port_manager(struct port_manager * manager) {
 	if (manager == NULL)
+	{
+		printf("manager == NULL");
 		return;
+	}
+	if(manager->gather_num==0)
+	{
+		printf("manager->gather_num==0");
+
+	}
+
 
 	int i;
 	if (manager->network != NULL) {

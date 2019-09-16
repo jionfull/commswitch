@@ -35,6 +35,9 @@
 								<option id="gnu.c.link.option.libs.231004568" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
 								</option>
+								<option id="gnu.c.link.option.paths.1010602597" superClass="gnu.c.link.option.paths" useByScannerDiscovery="false" valueType="libPaths">
+									<listOptionValue builtIn="false" value="/home/jionfull/commswitch/buildroot-2015.11.1/output/target/lib"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.844786795" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -43,7 +46,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.1234100307" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.470321281" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver"/>
 							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.1999015111" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler">
-								<option id="gnu.both.asm.option.include.paths.2137527514" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+								<option id="gnu.both.asm.option.include.paths.2137527514" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="/home/jionfull/git/commswitch/"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.730273977" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>

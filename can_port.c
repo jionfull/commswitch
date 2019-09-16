@@ -56,17 +56,16 @@ struct can_port * create_can_port(char *name, int baudrate) {
 	return pPort;
 }
 
-static void config_tx_length(struct can_port * port)
-{
-		char param_name[50];
-		int fd;
-		int pIndex = (port->portIndex);
-		sprintf(param_name, "/sys/class/net/can%d/tx_queue_len", pIndex);
-		fd = open(param_name, O_WRONLY);
-		if (fd > 0) {
-			write(fd, "1000", 4);
-			close(fd);
-		}
+static void config_tx_length(struct can_port * port) {
+	char param_name[50];
+	int fd;
+	int pIndex = (port->portIndex);
+	sprintf(param_name, "/sys/class/net/can%d/tx_queue_len", pIndex);
+	fd = open(param_name, O_WRONLY);
+	if (fd > 0) {
+		write(fd, "1000", 4);
+		close(fd);
+	}
 }
 
 static void config_led(struct can_port * port) {
@@ -185,6 +184,7 @@ static void * can_rx_proc(void * arg) {
 	int i, j;
 	char can_buffer[24 * MAX_RCV_CAN_FRAME];
 	int socket_can;
+	int bufsize = 4096*16;
 	struct timeval timestamp;
 
 	socket_can = socket(family, type, proto);
@@ -201,7 +201,17 @@ static void * can_rx_proc(void * arg) {
 		return NULL;
 	}
 	addr.can_ifindex = ifr.ifr_ifindex;
+	if (setsockopt(socket_can, SOL_SOCKET, SO_SNDBUF, &bufsize,
+			sizeof(bufsize))) {
+		printf("set send buffer size error\n");
+		return -1;
+	}
 
+	if (setsockopt(socket_can, SOL_SOCKET, SO_RCVBUF, &bufsize,
+			sizeof(bufsize))) {
+		printf("set receieve buffer size error\n");
+		return -1;
+	}
 	if (bind(socket_can, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		perror("bind");
 		return NULL;

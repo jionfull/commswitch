@@ -658,6 +658,7 @@ static void * proc_work(void * data) {
 
 	diff.tv_sec = 0;
 	diff.tv_usec = 0;
+	printf("proc_work run\n");
 	while (1) {
 
 		gettimeofday(&start, NULL);
