@@ -27,6 +27,8 @@
 #define MAX_TIMEOUT_COUNT (20) //sensor boot up need a about 15seconds
 
 static int open_serial(char *port, int baudrate);
+static void trigger_tx(struct gather_port* port);
+static int open_serial_even(char *port, int baudrate);
 static speed_t get_speed(int baudrate);
 static void * proc_work(void * data);
 static int timeval_subtract(struct timeval* result, struct timeval* x,
@@ -79,10 +81,94 @@ struct gather_port * create_gather(char* serial_name, int baudrate) {
 			gather_array[i].cmd_start_index = 0;
 			gather_array[i].cmd_length = 0;
 			gather_array[i].work_mode = MODE_WORK; //默认为工作模式
+			printf("%s serial init \r\n",serial_name);
+
 			break;
 		}
 	}
 	return pgather;
+
+}
+
+static struct gather_port * findFreeGatherPort()
+{
+
+    int i;
+
+    if (gather_array == NULL) {
+    		gather_array = (struct gather_port*) malloc(
+    				sizeof(struct gather_port) * MAX_GATHER_NUM);
+    		if (gather_array == NULL) {
+    			printf("size:%d", sizeof(struct gather_port));
+    			return NULL;
+    		}
+
+    }
+	for (i = 0; i < MAX_GATHER_NUM; i++) {
+			if (gather_array[i].used == 0) {
+				return &gather_array[i];
+			}
+	}
+	return NULL;
+}
+
+struct gather_port * create_modbus(char* serial_name, int baudrate) {
+
+	int i;
+	struct gather_port * pgatherport;
+	pgatherport = findFreeGatherPort();
+	if(pgatherport==NULL)
+	{
+		return NULL;
+	}
+
+	pgatherport->used = 1;
+	strcpy(pgatherport->serial_name, serial_name);
+	pgatherport->baudrate = baudrate;
+	pgatherport->sensor_num = 0;
+	int serial_fd = open_serial_even(serial_name, baudrate);
+
+	pgatherport->serial_fd = serial_fd;
+	struct frame_manager * fManager = create_frame_manager(serial_fd);
+	fManager->port = pgatherport;
+	pgatherport->frame_manager = fManager;
+	pgatherport->last_badsensor = 0;
+	pgatherport->cmd_start_index = 0;
+	pgatherport->cmd_length = 0;
+
+
+	return pgatherport;
+
+}
+
+struct gather_port * create_dlt645(char* serial_name, int baudrate) {
+
+
+	struct gather_port * pgatherport;
+	pgatherport = findFreeGatherPort();
+	if(pgatherport==NULL)
+	{
+		return NULL;
+	}
+
+	pgatherport->used = 1;
+	strcpy(pgatherport->serial_name, serial_name);
+	pgatherport->baudrate = baudrate;
+	pgatherport->sensor_num = 0;
+	int serial_fd = open_serial_even(serial_name, baudrate);
+
+	pgatherport->serial_fd = serial_fd;
+	struct frame_manager * fManager = create_frame_manager(serial_fd);
+	fManager->port = pgatherport;
+	pgatherport->frame_manager = fManager;
+	pgatherport->last_badsensor = 0;
+	pgatherport->cmd_start_index = 0;
+	pgatherport->cmd_length = 0;
+	pgatherport->work_mode = MODE_DLT645; //默认为工作模式
+    printf("%s work mode dlt655\r\n",serial_name);
+
+
+	return pgatherport;
 
 }
 
@@ -164,7 +250,13 @@ void send_serial_data(struct gather_port *port, char * buffer, int length) {
 
 	char dst_addr = buffer[1];
 	int index_cmd;
-	if ((dst_addr == (char) 0xff) || (port->work_mode == MODE_DEBUG)) { //(char) must be exist
+	if(port->work_mode==3||port->work_mode==4)
+	{
+	   int ret=	write(port->serial_fd, buffer, length);
+	   trigger_tx(port);
+	   printf("serial write ret %d\n",ret);
+	}
+	else if ((dst_addr == (char) 0xff) || (port->work_mode == MODE_DEBUG)) { //(char) must be exist
 		pthread_mutex_t * pMutex = &(port->mutext);
 		pthread_mutex_lock(pMutex);
 
@@ -651,9 +743,9 @@ static void * proc_work(void * data) {
 	struct timeval diff;
 
 	int i;
-	struct gather_port* pgather = (struct gather_port*) data;
-	struct frame_manager *pManager = pgather->frame_manager;
-	char* buffer=pgather->tx_data;
+	struct gather_port* port = (struct gather_port*) data;
+	struct frame_manager *pManager = port->frame_manager;
+	char* buffer=port->tx_data;
 	int length = 0;
 
 	diff.tv_sec = 0;
@@ -663,10 +755,10 @@ static void * proc_work(void * data) {
 
 		gettimeofday(&start, NULL);
 
-		if (pgather->work_mode == MODE_WORK) {
+		if (port->work_mode == MODE_WORK) {
 			//query all data
-			for (i = 0; i < pgather->sensor_num; i++) {
-				struct smart_sensor * sensor = pgather->sensors + i;
+			for (i = 0; i < port->sensor_num; i++) {
+				struct smart_sensor * sensor = port->sensors + i;
 
 				if (sensor->timeout_count >= MAX_TIMEOUT_COUNT)
 					continue;
@@ -674,20 +766,19 @@ static void * proc_work(void * data) {
 				usleep(1000);
 			}
 			//query dc sensor digital
-			for (i = 0; i < pgather->sensor_num; i++) {
-				struct smart_sensor * sensor = pgather->sensors + i;
+			for (i = 0; i < port->sensor_num; i++) {
+				struct smart_sensor * sensor = port->sensors + i;
 
 				if (sensor->timeout_count >= MAX_TIMEOUT_COUNT)
 					continue;
 				query_dc_digital(sensor);
 				usleep(1000);
-
 			}
 
 			//query next bad sensor
 			for(i=0;i<5;i++)
 			{
-				query_next_bad_sensor(pgather);
+				query_next_bad_sensor(port);
 				usleep(1000);
 			}
 
@@ -699,15 +790,37 @@ static void * proc_work(void * data) {
 			if (interval < QUERY_INTERVAL) {
 				usleep(QUERY_INTERVAL - interval);
 			}
-		} else {
-			get_gather_cmd(pgather, buffer, &length);
+		}
+		else if(port->work_mode == MODE_MODBUS)
+		{
+			get_gather_cmd(port, buffer, &length);
+			if (length <= 0) {
+				usleep(2000);
+				continue;
+			}
+			frame_manager__send_raw(pManager, buffer, length);
+			trigger_tx(port);
+		}
+		else if(port->work_mode == MODE_DLT645)
+		{
+			get_gather_cmd(port, buffer, &length);
+			if (length <= 0) {
+								usleep(20000);
+								continue;
+				}
+
+		     frame_manager__send_raw(pManager, buffer, length);
+							trigger_tx(port);
+		}
+		else {
+			get_gather_cmd(port, buffer, &length);
 			if (length <= 0) {
 				usleep(20000);
 				continue;
 			}
 
 			send2sensor(pManager, buffer, length);
-			trigger_tx(pgather);
+			trigger_tx(port);
 
 		}
 
@@ -769,6 +882,58 @@ static int open_serial(char *port, int baudrate) {
 
 	//tty.c_cc[VMIN] = 0;
 	//tty.c_cc[VTIME] = 1;
+
+	tty.c_cflag |= CREAD | CLOCAL; // turn on READ & ignore ctrl lines
+	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
+	tty.c_iflag &= ~(INLCR | IGNCR | ICRNL);
+	tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
+	tty.c_oflag &= ~OPOST; // make raw
+
+	/* Flush Port, then applies attributes */
+	tcflush(serial_fd, TCIFLUSH);
+
+	if (tcsetattr(serial_fd, TCSANOW, &tty) != 0) {
+
+	}
+
+	fcntl(serial_fd, F_SETFL, 0); //block read
+	return serial_fd;
+}
+
+
+static int open_serial_even(char *port, int baudrate) {
+	int serial_fd = open(port, O_RDWR | O_NONBLOCK | O_NDELAY);
+
+	if (serial_fd < 0) {
+		return serial_fd;
+	}
+	/* *** Configure Port *** */
+	struct termios tty;
+	memset(&tty, 0, sizeof tty);
+
+	/* Error Handling */
+	if (tcgetattr(serial_fd, &tty) != 0) {
+
+	}
+	/* Set Baud Rate */
+	speed_t speed = get_speed(baudrate);
+	cfsetospeed(&tty, speed);
+	cfsetispeed(&tty, speed);
+
+	/* Setting other Port Stuff */
+	tty.c_cflag |= PARENB; // Make 8n1
+	tty.c_cflag &= ~CSTOPB;
+	tty.c_cflag &= ~PARODD;
+	tty.c_cflag &= ~CSIZE;
+	tty.c_cflag |= CS8;
+	tty.c_cflag &= ~CRTSCTS; // no flow control
+	tty.c_lflag = 0; // no signaling chars, no echo, no canonical processing
+	tty.c_oflag = 0; // no remapping, no delays
+	//tty.c_cc[VMIN] = 0; // read doesn't block
+	//tty.c_cc[VTIME] = 5; // 0.5 seconds read timeout
+
+	tty.c_cc[VMIN] = 10;
+	tty.c_cc[VTIME] = 1;
 
 	tty.c_cflag |= CREAD | CLOCAL; // turn on READ & ignore ctrl lines
 	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl

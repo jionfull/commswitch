@@ -18,6 +18,7 @@
 static struct frame_manager manager_array[MAX_MANAGER_NUM];
 
 static void * serial_rx(void * data);
+static void * serial_rxlon(void * data);
 static void check_frame(struct frame_manager * manager, char* frame, int length);
 static void put_frame(struct frame_manager * manager, char* frame, int length);
 
@@ -43,7 +44,11 @@ struct frame_manager * create_frame_manager(int serial_fd) {
 void start_frame_manager(struct frame_manager * manager) {
 
 	pthread_t * thread = &(manager->thread_rx);
-	pthread_create(thread, NULL, serial_rx, manager);
+	if (manager->port->work_mode == MODE_WORK) {
+		pthread_create(thread, NULL, serial_rxlon, manager);
+	} else {
+		pthread_create(thread, NULL, serial_rx, manager);
+	}
 
 }
 
@@ -74,7 +79,7 @@ int serial_rx_timeout(struct frame_manager* manager) {
 	return interval;
 }
 
-static void * serial_rx(void * data) {
+static void * serial_rxlon(void * data) {
 	struct frame_manager* manager = (struct frame_manager*) data;
 	char* rx_buffer = manager->rx_buffer;
 	char* frame_buffer = manager->frame_buffer;
@@ -144,23 +149,33 @@ static void * serial_rx(void * data) {
 	return NULL;
 }
 
+static void * serial_rx(void * data) {
+	struct frame_manager* manager = (struct frame_manager*) data;
+	char* rx_buffer = manager->rx_buffer;
+
+	int serial_fd = manager->serial_fd;
+
+	set_rx_time(manager); //initialize rx time
+
+	while (1) {
+		int length = read(serial_fd, rx_buffer, RX_BUFFER_SIZE);
+
+		if (length > 0) {
+			set_rx_time(manager);
+			put_frame(manager, rx_buffer, length);
+		}
+
+	}
+
+	return NULL;
+}
+
 static void check_frame(struct frame_manager * manager, char* frame, int length) {
 
 	int len = frame[2] + (frame[3] << 8);
 
 	if (len != length - 6)
 		return;
-//	unsigned short sum = 0;
-//	int i;
-//	for (i = 0; i < len; i++) {
-//		sum += frame[2 + i];
-//	}
-//	char c1 = sum & 0xff;
-//	if (c1 != frame[length - 4])
-//		return;
-//	char c2 = sum >> 8;
-//	if (c2 != frame[length - 3])
-//		return;
 
 	put_frame(manager, frame, length);
 
@@ -194,6 +209,36 @@ static void put_frame(struct frame_manager * manager, char* frame, int length) {
 		}
 		trigger_rx(port);
 		send_network_data(portManager, rx_frame, 0, length - 4 + 11);
+	} else if ((manager->port->work_mode) == MODE_MODBUS) //工作模式
+			{
+		struct gather_port *port = manager->port;
+		char *rx_frame = port->rx_data;
+		int i;
+		struct port_manager * portManager = get_port_manager();
+		rx_frame[0] = 0x02; //Serial-data
+		rx_frame[1] = port->portIndex; //COM Num
+
+		rx_frame[10] = 0xff; //sensorType
+		for (i = 0; i < length; i++) {
+			rx_frame[2 + i] = frame[i];
+		}
+		trigger_rx(port);
+		send_network_data(portManager, rx_frame, 0, length + 2);
+	} else if ((manager->port->work_mode) == MODE_DLT645) //工作模式
+			{
+		struct gather_port *port = manager->port;
+		char *rx_frame = port->rx_data;
+		int i;
+		struct port_manager * portManager = get_port_manager();
+		rx_frame[0] = 0x02; //Serial-data
+		rx_frame[1] = port->portIndex; //COM Num
+
+		rx_frame[10] = 0xff; //sensorType
+		for (i = 0; i < length; i++) {
+			rx_frame[2 + i] = frame[i];
+		}
+		trigger_rx(port);
+		send_network_data(portManager, rx_frame, 0, length + 2);
 	} else //工作模式
 	{
 		pthread_mutex_t * pMutex = &(manager->mutext);
@@ -296,7 +341,6 @@ void get_frame(struct frame_manager * manager, char * buffer, int *length,
 	pthread_mutex_unlock(pMutex);
 
 }
-
 void send2sensor(struct frame_manager *manager, char* frame, int length) {
 	int data_len = length + 2;
 	char d1 = (char) (data_len & 0xff);
@@ -360,5 +404,11 @@ void send2sensor(struct frame_manager *manager, char* frame, int length) {
 	index++;
 
 	write(manager->serial_fd, buffer, index);
+
+}
+void frame_manager__send_raw(struct frame_manager *manager, char* frame,
+		int length) {
+
+	write(manager->serial_fd, frame, length);
 
 }

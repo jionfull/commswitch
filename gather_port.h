@@ -47,7 +47,7 @@ struct smart_sensor {
 };
 
 enum GatherMode {
-	MODE_DEBUG = 1, MODE_WORK = 2,
+	MODE_DEBUG = 1, MODE_WORK = 2,MODE_MODBUS=3,MODE_DLT645
 };
 
 struct gather_port {
@@ -76,10 +76,14 @@ struct gather_port {
 };
 
 struct gather_port* create_gather(char*serial_name, int baudrate);
+struct gather_port* create_modbus(char*serial_name, int baudrate);
+struct gather_port* create_dlt645(char*serial_name, int baudrate);
 
 void gather_add_module(int addr, int type);
 
 void start_gather_port(struct gather_port* pgather);
+void start_dlt645_port(struct gather_port* pgather);
+void start_modbus_port(struct gather_port* pgather);
 void stop_gather_port(struct gather_port* pgather);
 
 void add_sensor_II(struct gather_port *port, int addr, int type);

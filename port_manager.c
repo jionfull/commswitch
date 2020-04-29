@@ -51,9 +51,7 @@ struct port_manager * get_port_manager() {
 			} else if (strncmp(port->type, "RS", 2) == 0) {
 				char * serial = get_sys_port(port->name);
 
-				if (port->workMode == 2) //smart sensor II型智能传感器
-						{
-
+				if (port->workMode == 2) {//smart sensor II型智能传感器
 					struct gather_port* gather_port = create_gather(serial,
 							port->baudrate);
 					if (gather_port != NULL) {
@@ -71,6 +69,27 @@ struct port_manager * get_port_manager() {
 
 				}
 
+				else if (port->workMode == 3) //modbus 透传
+						{
+
+					struct gather_port* gather_port = create_modbus(serial,
+							port->baudrate);
+					if (gather_port != NULL) {
+
+						insert_gather_port(manager_global, gather_port);
+					}
+
+				} else if (port->workMode == 4) //DLT485 透传
+						{
+
+					struct gather_port* gather_port = create_dlt645(serial,
+							port->baudrate);
+					if (gather_port != NULL) {
+						gather_port->portIndex = atoi(port->name + 3);
+						insert_gather_port(manager_global, gather_port);
+					}
+
+				}
 			}
 		}
 
@@ -79,17 +98,14 @@ struct port_manager * get_port_manager() {
 }
 
 void start_port_manager(struct port_manager * manager) {
-	if (manager == NULL)
-	{
+	if (manager == NULL) {
 		printf("manager == NULL");
 		return;
 	}
-	if(manager->gather_num==0)
-	{
+	if (manager->gather_num == 0) {
 		printf("manager->gather_num==0");
 
 	}
-
 
 	int i;
 	if (manager->network != NULL) {
@@ -170,8 +186,8 @@ void set_port_mode(struct port_manager*manager, char *buffer, int length) {
 	for (i = 0; i < manager->gather_num; i++) {
 		if (manager->gathers[i]->portIndex == portIndex) {
 			manager->gathers[i]->work_mode = buffer[3];
-			manager->gathers[i]->cmd_length=0;
-			manager->gathers[i]->cmd_start_index=0;
+			manager->gathers[i]->cmd_length = 0;
+			manager->gathers[i]->cmd_start_index = 0;
 			break;
 		}
 	}

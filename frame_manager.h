@@ -46,6 +46,7 @@ void stop_frame_manager(struct frame_manager* manager);
 
 void clear_all_frame(struct frame_manager * manager);
 void send2sensor(struct frame_manager *manager, char* frame, int length);
+void frame_manager__send_raw(struct frame_manager *manager, char* frame, int length);
 void get_frame(struct frame_manager * manager, char * buffer, int *length,
 		int timeout_ms);
 
