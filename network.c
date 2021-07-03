@@ -284,7 +284,7 @@ static void * client_proc(void * arg) {
 
 static void process_frame(char* frame, int length) {
 
-	printf("process cmd %x\n",frame[2]);
+	printf("process cmd %x,%x\n",frame[2],frame[3]);
 	struct port_manager * manager = get_port_manager();
 	switch (frame[2]) {
 	case 1: //CAN data

@@ -75,7 +75,7 @@ struct port_manager * get_port_manager() {
 					struct gather_port* gather_port = create_modbus(serial,
 							port->baudrate);
 					if (gather_port != NULL) {
-
+						gather_port->portIndex = atoi(port->name + 3);
 						insert_gather_port(manager_global, gather_port);
 					}
 
@@ -198,11 +198,16 @@ void to_serial_data(struct port_manager*manager, char *buffer, int length) {
 
 	int i;
 	for (i = 0; i < manager->gather_num; i++) {
+
 		if (manager->gathers[i]->portIndex == portIndex) {
+			printf("find port %x\n",portIndex);
 			send_serial_data(manager->gathers[i], buffer + 1, length - 1);
-			break;
+
+			return;
 		}
 	}
+	printf("not find port %x\n",portIndex);
+
 }
 
 static char *get_sys_port(char * port) {

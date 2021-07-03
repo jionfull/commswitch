@@ -222,7 +222,7 @@ static void put_frame(struct frame_manager * manager, char* frame, int length) {
 		char *rx_frame = port->rx_data;
 		int i;
 		struct port_manager * portManager = get_port_manager();
-		rx_frame[0] = 0x02; //Serial-data
+		rx_frame[0] = 0x03; //Serial-data
 		rx_frame[1] = port->portIndex; //COM Num
 
 		rx_frame[10] = 0xff; //sensorType
@@ -237,7 +237,7 @@ static void put_frame(struct frame_manager * manager, char* frame, int length) {
 		char *rx_frame = port->rx_data;
 		int i;
 		struct port_manager * portManager = get_port_manager();
-		rx_frame[0] = 0x02; //Serial-data
+		rx_frame[0] = 0x03; //Serial-data
 		rx_frame[1] = port->portIndex; //COM Num
 
 		rx_frame[10] = 0xff; //sensorType

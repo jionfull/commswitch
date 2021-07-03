@@ -126,7 +126,7 @@ struct gather_port * create_modbus(char* serial_name, int baudrate) {
 	strcpy(pgatherport->serial_name, serial_name);
 	pgatherport->baudrate = baudrate;
 	pgatherport->sensor_num = 0;
-	int serial_fd = open_serial_even(serial_name, baudrate);
+	int serial_fd = open_serial(serial_name, baudrate);
 
 	pgatherport->serial_fd = serial_fd;
 	struct frame_manager * fManager = create_frame_manager(serial_fd);
@@ -135,7 +135,7 @@ struct gather_port * create_modbus(char* serial_name, int baudrate) {
 	pgatherport->last_badsensor = 0;
 	pgatherport->cmd_start_index = 0;
 	pgatherport->cmd_length = 0;
-
+	pgatherport->work_mode = 3; //默认为工作模式
 
 	return pgatherport;
 
@@ -250,6 +250,7 @@ void send_serial_data(struct gather_port *port, char * buffer, int length) {
 
 	char dst_addr = buffer[1];
 	int index_cmd;
+	 printf("serial work_mod = %x\n",port->work_mode);
 	if(port->work_mode==3||port->work_mode==4)
 	{
 	   int ret=	write(port->serial_fd, buffer, length);
@@ -932,8 +933,8 @@ static int open_serial_even(char *port, int baudrate) {
 	//tty.c_cc[VMIN] = 0; // read doesn't block
 	//tty.c_cc[VTIME] = 5; // 0.5 seconds read timeout
 
-	tty.c_cc[VMIN] = 10;
-	tty.c_cc[VTIME] = 1;
+	tty.c_cc[VMIN] = 0;
+	tty.c_cc[VTIME] = 0;
 
 	tty.c_cflag |= CREAD | CLOCAL; // turn on READ & ignore ctrl lines
 	tty.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
