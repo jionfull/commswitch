@@ -91,10 +91,16 @@ static void * serial_rxlon(void * data) {
 	set_rx_time(manager); //initialize rx time
 
 	while (1) {
+		usleep(10*1000);
 		int length = read(serial_fd, rx_buffer, RX_BUFFER_SIZE);
 
 		if (length > 0) {
 			set_rx_time(manager);
+		}
+		else
+		{
+			frameLength=0;
+			metDLE=0;
 		}
 
 		for (i = 0; i < length; i++) {
@@ -158,6 +164,7 @@ static void * serial_rx(void * data) {
 	set_rx_time(manager); //initialize rx time
 
 	while (1) {
+		usleep(10*1000);
 		int length = read(serial_fd, rx_buffer, RX_BUFFER_SIZE);
 
 		if (length > 0) {

@@ -10,7 +10,7 @@
 
 #include <pthread.h>
 
-#define MAX_RX_FRAME_LENGTH  (16*1024)
+#define MAX_RX_FRAME_LENGTH  (32*1024)
 #define MAX_FRAME_COUNT (4)
 #define MAX_TX_FRAME_LENGTH	(64*1024)
 
