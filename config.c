@@ -98,14 +98,15 @@ struct sensor_type * get_sensor_type(int type) {
 	if (global_config == NULL)
 		return NULL;
 	num = global_config->sensor_num;
-	struct sensor_type * s_type = NULL;
+	struct sensor_type * s_type = global_config->sensor_types + 0;
 
 	for (i = 0; i < num; i++) {
 		if (global_config->sensor_types[i].type == type) {
 			s_type = global_config->sensor_types + i;
-			break;
+			return s_type;
 		}
 	}
+	printf("Cannot find Type %d\r\n",type);
 	return s_type;
 }
 struct config_global * get_global_config() {
