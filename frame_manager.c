@@ -164,11 +164,12 @@ static void * serial_rx(void * data) {
 	set_rx_time(manager); //initialize rx time
 
 	while (1) {
-		usleep(10*1000);
+		usleep(40*1000);
 		int length = read(serial_fd, rx_buffer, RX_BUFFER_SIZE);
 
 		if (length > 0) {
 			set_rx_time(manager);
+
 			put_frame(manager, rx_buffer, length);
 		}
 
@@ -224,12 +225,16 @@ static void put_frame(struct frame_manager * manager, char* frame, int length) {
 		struct port_manager * portManager = get_port_manager();
 		rx_frame[0] = 0x03; //Serial-data
 		rx_frame[1] = port->portIndex; //COM Num
-
-		rx_frame[10] = 0xff; //sensorType
 		for (i = 0; i < length; i++) {
 			rx_frame[2 + i] = frame[i];
 		}
 		trigger_rx(port);
+		printf("raw_no_paritybit_send_to_server:");
+		for(int i=0;i<length+2;i++)
+		{
+			printf("%x ",rx_frame[i]);
+		}
+		printf("\n");
 		send_network_data(portManager, rx_frame, 0, length + 2);
 	} else if ((manager->port->work_mode) == MODE_DLT645) //工作模式
 			{

@@ -21,13 +21,13 @@ void get_app_version(struct port_manager * manager) {
 	frame[1] = 0; //COM Num
 
 	frame[10] = 1; //1.1.0.0
-	frame[11] = 1;
+	frame[11] = 2;
 	frame[12] = 0;
 	frame[13] = 0;
 
-	frame[14] = 19; //年月日
-	frame[15] = 04;
-	frame[16] = 11;
+	frame[14] = 21; //年月日
+	frame[15] = 07;
+	frame[16] = 06;
 
     printf("Receive ver cmd\n");
 
